@@ -1,25 +1,46 @@
-use std::path::Path;
+use std::{path::Path, time::Instant};
+
+use crate::search::{search_key, SearchResult};
 
 #[path = "./tools/file_tools.rs"]
 mod file_tools;
 #[path = "./tools/search.rs"]
 mod search;
 
-fn main() {
+fn run_search() -> Instant {
+    let now = Instant::now();
     let profiles = search::get_profiles().unwrap();
-    let result = search::get_path_list(
+    let file_list = search::get_path_list(
         Path::new(&profiles.entry),
         &profiles.include_file,
         &profiles.exclude_file,
         &profiles.exclude_extension,
     );
 
-    file_tools::write_json_to(&Path::new(&profiles.output), &result);
+    let mut result_object: Vec<SearchResult> = vec![];
+    let mut searched_lines: usize = 0;
+    let mut founded_key_file_num: usize = 0;
+    for file_path in &file_list {
+        let mut result = search_key(&Path::new(file_path), &profiles.key);
+        searched_lines += result.total_lines;
+        if !result.search_result_list.is_empty() {
+            founded_key_file_num += 1;
+            result_object.append(&mut result.search_result_list);
+        }
+    }
 
-    println!("{:#?}", result);
+    // file_tools::write_json_to(&Path::new(&profiles.output), &file_list);
+    file_tools::write_json_to(&Path::new(&profiles.output), &result_object);
+
     println!(
-        "在{:#?}目录下一共找到{:#?}个文件",
-        profiles.entry,
-        result.len()
+        "本次搜索 {:#?} 个文件，{:#?} 行, 在 {:#?} 个文件中发现结果",
+        file_list.len(),
+        searched_lines,
+        founded_key_file_num
     );
+    now
+}
+
+fn main() {
+    println!("方法 run_search 执行时间：{:#?}", run_search().elapsed());
 }

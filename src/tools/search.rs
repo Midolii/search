@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::{
     env,
-    fs::{self, read_dir},
+    fs::{self, read, read_dir},
+    io::BufRead,
     path::Path,
 };
 
@@ -56,11 +57,11 @@ pub fn get_path_list(
     }
     if entry.is_file() {
         if let Some(exclude) = exclude_extension {
-            if exclude.contains(&entry.extension().unwrap().to_str().unwrap().to_string()) {
+            if exclude.contains(&entry.extension().unwrap().to_str().unwrap().to_owned()) {
                 return result;
             }
         }
-        result.push(entry.to_str().unwrap().to_string());
+        result.push(entry.to_str().unwrap().to_owned());
     }
     if entry.is_dir() {
         let files = read_dir(entry).unwrap();
@@ -76,4 +77,45 @@ pub fn get_path_list(
         }
     }
     result
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SearchResult {
+    path: String,
+    line: usize,
+    content: String,
+}
+
+pub struct SearchResultWithLines {
+    pub search_result_list: Vec<SearchResult>,
+    pub total_lines: usize,
+}
+
+/// 根据传入的文件路径和关键字在文件中进行查找对应行，最终返回所有匹配到的行以及文件行数，如果没有匹配到的结果则也会返回文件总行数
+pub fn search_key(target: &Path, key: &String) -> SearchResultWithLines {
+    let mut result: Vec<SearchResult> = vec![];
+    let mut line_num = 0;
+    match read(target) {
+        Ok(reader) => {
+            reader.lines().for_each(|line| match line {
+                Ok(line) => {
+                    line_num += 1;
+                    if line.contains(key) {
+                        result.push(SearchResult {
+                            path: target.to_str().unwrap().to_owned(),
+                            line: line_num,
+                            content: line.trim().to_owned(),
+                        })
+                    }
+                }
+                Err(_) => {}
+            });
+        }
+        Err(_) => {}
+    }
+
+    SearchResultWithLines {
+        search_result_list: result,
+        total_lines: line_num,
+    }
 }
