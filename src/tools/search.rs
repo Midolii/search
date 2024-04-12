@@ -25,7 +25,7 @@ pub fn get_profiles() -> Option<Profiles> {
         1 => {
             let profiles: Profiles = serde_yaml::from_str(
                 fs::read_to_string(Path::new(DEFAULT_APPLICATION_YML))
-                    .unwrap()
+                    .expect("没有找到配置文件，请前往 https://github.com/Midolii/search 查看文档")
                     .as_str(),
             )
             .unwrap();
