@@ -1,0 +1,8 @@
+key: template
+entry: ./
+output: ./search-output.json
+include_file:
+exclude_file:
+  - .git
+  - target
+exclude_extension:
