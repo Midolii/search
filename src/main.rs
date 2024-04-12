@@ -21,6 +21,10 @@ fn run_search() -> Instant {
     let mut searched_lines: usize = 0;
     let mut founded_key_file_num: usize = 0;
     for file_path in &file_list {
+        // 排除output文件
+        if file_path.contains(&profiles.output) {
+            continue;
+        }
         let mut result = search_key(&Path::new(file_path), &profiles.key);
         searched_lines += result.total_lines;
         if !result.search_result_list.is_empty() {

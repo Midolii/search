@@ -1,8 +1,8 @@
-key: template
-entry: ./
-output: ./search-output.json
-include_file:
-exclude_file:
+key: template # 搜索的关键字
+entry: ./ # 搜索入口文件夹
+output: ./search-output.json # 输出结果文件
+include_file: # 匹配关键字，功能待开发
+exclude_file: # 忽略地址中包含此关键字的文件夹和文件
   - .git
   - target
-exclude_extension:
+exclude_extension: # 忽略包含此关键字的文件
